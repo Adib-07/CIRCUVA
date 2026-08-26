@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" width="900" height="600" role="img" aria-label="Campus waste and recycling area before cleanup, with overflowing bins and litter on the ground">
+  <defs>
+    <linearGradient id="skyB" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#cfe3ee"/><stop offset="1" stop-color="#eaf2f6"/>
+    </linearGradient>
+    <linearGradient id="grassB" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#93b683"/><stop offset="1" stop-color="#7aa066"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="600" fill="url(#skyB)"/>
+  <rect x="60" y="250" width="160" height="150" fill="#c8d2dc"/>
+  <rect x="250" y="220" width="120" height="180" fill="#d3dbe4"/>
+  <rect x="620" y="240" width="180" height="160" fill="#c8d2dc"/>
+  <rect x="820" y="270" width="80" height="130" fill="#d3dbe4"/>
+  <rect x="0" y="380" width="900" height="220" fill="url(#grassB)"/>
+  <polygon points="350,600 450,380 520,380 640,600" fill="#cabfae"/>
+  <g>
+    <rect x="140" y="360" width="14" height="42" fill="#7a5a3a"/>
+    <circle cx="147" cy="348" r="36" fill="#5f8f4e"/>
+    <rect x="740" y="360" width="14" height="42" fill="#7a5a3a"/>
+    <circle cx="747" cy="348" r="36" fill="#5f8f4e"/>
+  </g>
+  <g>
+    <rect x="395" y="430" width="72" height="112" rx="6" fill="#3b7d5a"/>
+    <rect x="500" y="430" width="72" height="112" rx="6" fill="#3b7d5a"/>
+    <ellipse cx="431" cy="430" rx="36" ry="8" fill="#2c5e44"/>
+    <ellipse cx="536" cy="430" rx="36" ry="8" fill="#2c5e44"/>
+    <rect x="405" y="392" width="42" height="42" rx="6" fill="#6b7280"/>
+    <rect x="516" y="398" width="40" height="38" rx="6" fill="#94a3b8"/>
+    <circle cx="452" cy="404" r="11" fill="#475569"/>
+    <rect x="470" y="380" width="34" height="22" rx="4" fill="#64748b" transform="rotate(-12 470 380)"/>
+  </g>
+  <g fill="#6b7280" opacity="0.9">
+    <circle cx="330" cy="540" r="6"/><circle cx="382" cy="566" r="5"/>
+    <circle cx="600" cy="546" r="7"/><circle cx="642" cy="562" r="5"/>
+    <circle cx="470" cy="576" r="6"/><rect x="558" y="556" width="16" height="9" rx="2" fill="#94a3b8"/>
+    <circle cx="700" cy="540" r="5"/>
+  </g>
+</svg>

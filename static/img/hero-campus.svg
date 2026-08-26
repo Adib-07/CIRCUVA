@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-label="Illustrated university campus with green spaces">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#eaf4ff"/>
+      <stop offset="100%" stop-color="#dcefe6"/>
+    </linearGradient>
+    <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e8f3ea"/>
+      <stop offset="100%" stop-color="#d3ebd9"/>
+    </linearGradient>
+    <linearGradient id="bld" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#eef2f6"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#sky)"/>
+  <circle cx="650" cy="110" r="54" fill="#fff3bf"/>
+  <circle cx="650" cy="110" r="72" fill="#fff3bf" opacity="0.35"/>
+  <rect y="360" width="800" height="240" fill="url(#ground)"/>
+  <!-- paths -->
+  <path d="M0 600 L320 360 L520 360 L800 470 L800 600 Z" fill="#cfe6d6" opacity="0.7"/>
+  <path d="M120 600 L300 400 L800 400" fill="none" stroke="#ffffff" stroke-width="26" stroke-linecap="round" opacity="0.8"/>
+  <!-- buildings -->
+  <g stroke="#cdd9e5" stroke-width="2">
+    <rect x="70" y="210" width="150" height="160" rx="10" fill="url(#bld)"/>
+    <rect x="250" y="170" width="120" height="200" rx="10" fill="url(#bld)"/>
+    <rect x="430" y="230" width="140" height="140" rx="10" fill="url(#bld)"/>
+    <rect x="600" y="190" width="150" height="180" rx="10" fill="url(#bld)"/>
+  </g>
+  <g fill="#10b981" opacity="0.85">
+    <rect x="84" y="226" width="26" height="26" rx="3"/><rect x="124" y="226" width="26" height="26" rx="3"/><rect x="164" y="226" width="26" height="26" rx="3"/>
+    <rect x="264" y="186" width="26" height="26" rx="3"/><rect x="304" y="186" width="26" height="26" rx="3"/><rect x="344" y="186" width="26" height="26" rx="3"/>
+    <rect x="444" y="246" width="26" height="26" rx="3"/><rect x="500" y="246" width="26" height="26" rx="3"/>
+    <rect x="614" y="206" width="26" height="26" rx="3"/><rect x="654" y="206" width="26" height="26" rx="3"/><rect x="694" y="206" width="26" height="26" rx="3"/>
+  </g>
+  <!-- trees -->
+  <g>
+    <circle cx="210" cy="430" r="30" fill="#86c46a"/><rect x="205" y="450" width="10" height="26" fill="#7a5a3a"/>
+    <circle cx="540" cy="450" r="34" fill="#86c46a"/><rect x="535" y="472" width="10" height="28" fill="#7a5a3a"/>
+    <circle cx="710" cy="440" r="28" fill="#86c46a"/><rect x="705" y="460" width="10" height="26" fill="#7a5a3a"/>
+    <circle cx="380" cy="470" r="26" fill="#86c46a"/><rect x="375" y="490" width="10" height="24" fill="#7a5a3a"/>
+  </g>
+  <!-- bins -->
+  <g transform="translate(150 520)">
+    <rect x="0" y="0" width="34" height="46" rx="6" fill="#10b981"/>
+    <rect x="6" y="-8" width="22" height="10" rx="4" fill="#0f9d6e"/>
+  </g>
+  <g transform="translate(600 520)">
+    <rect x="0" y="0" width="34" height="46" rx="6" fill="#3b82f6"/>
+    <rect x="6" y="-8" width="22" height="10" rx="4" fill="#2f6fd6"/>
+  </g>
+</svg>

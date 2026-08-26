@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 150" width="220" height="150" role="img" aria-label="Food waste illustration">
+  <rect width="220" height="150" fill="#f6f1ee"/>
+  <g transform="translate(75 30)">
+    <ellipse cx="35" cy="96" rx="48" ry="14" fill="#e7d8c9"/>
+    <path d="M-5 60 q40 -34 80 0 q6 30 -12 38 q-30 14 -58 -2 q-12 -18 0 -36 Z" fill="#c98a4b"/>
+    <circle cx="18" cy="58" r="8" fill="#7bbf6a"/>
+    <circle cx="44" cy="50" r="7" fill="#e0584f"/>
+    <circle cx="58" cy="70" r="6" fill="#f2c14e"/>
+    <path d="M30 40 q6 -16 16 -10" stroke="#5b8f3a" stroke-width="4" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>

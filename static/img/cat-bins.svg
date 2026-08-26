@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 150" width="220" height="150" role="img" aria-label="Waste bin illustration">
+  <rect width="220" height="150" fill="#f1f6f3"/>
+  <g transform="translate(70 36)">
+    <rect x="0" y="14" width="80" height="92" rx="10" fill="#10b981"/>
+    <rect x="0" y="14" width="80" height="20" rx="10" fill="#0f9d6e"/>
+    <rect x="14" y="0" width="52" height="16" rx="7" fill="#0b7d56"/>
+    <rect x="70" y="30" width="36" height="20" rx="8" fill="#f59e0b" transform="rotate(18 70 30)"/>
+    <rect x="40" y="2" width="30" height="16" rx="7" fill="#f59e0b" transform="rotate(-12 40 2)"/>
+    <circle cx="92" cy="60" r="9" fill="#fbbf24"/>
+    <rect x="6" y="44" width="68" height="6" rx="3" fill="#ffffff" opacity="0.5"/>
+    <rect x="6" y="64" width="68" height="6" rx="3" fill="#ffffff" opacity="0.5"/>
+  </g>
+</svg>

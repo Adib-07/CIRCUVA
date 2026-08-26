@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Circuva — See it. Report it. Resolve it.</title>
+  <meta name="description" content="Closing the loop on campus environmental operations. Report, resolve, and analyze issues across university grounds.">
+
+  <!-- External Libraries (CDN) -->
+
+  <!-- Application Styles -->
+  <link rel="stylesheet" href="/static/css/styles.css?v=2">
+</head>
+<body>
+
+  <!-- Demo environment utility strip -->
+  <div class="demo-bar">
+    <div class="demo-bar__left">
+      <span class="demo-bar-badge demo-bar-badge--sample">Sample campus dataset</span>
+      <span class="demo-bar__label">Interactive product preview</span>
+    </div>
+    <div class="demo-bar__right">
+      <span class="demo-bar__hint">Explore as</span>
+          <button id="btnViewHome" class="demo-nav-btn active">Public</button>
+          <button id="btnViewStudent" class="demo-nav-btn">Student</button>
+          <button id="btnViewFaculty" class="demo-nav-btn">Faculty</button>
+          <button id="btnViewFacilities" class="demo-nav-btn">Facilities</button>
+          <button id="btnViewAdmin" class="demo-nav-btn">Admin</button>
+          <button id="btnViewLiveImpact" class="demo-nav-btn">Live Impact</button>
+          <button onclick="openModal('demoModal')" class="demo-nav-btn demo-nav-btn--accent">Try demo</button>
+    </div>
+  </div>
+
+  <!-- Primary Header Navbar -->
+  <header class="navbar">
+    <a href="#top" class="brand-logo" onclick="window.scrollTo({top:0,behavior:'smooth'}); return false;">
+      <span class="brand-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><polyline points="20 3 20 8 15 8"/></svg></span>
+      <span>Circuva</span>
+    </a>
+
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#problem" class="nav-link">The problem</a>
+          <a href="#liveImpact" class="nav-link" onclick="switchView('liveimpact'); return false;">Live impact</a>
+      <a href="#how" class="nav-link">How it works</a>
+      <a href="#categories" class="nav-link">Categories</a>
+      <a href="#hotspots" class="nav-link">Hotspots</a>
+      <a href="#metrics" class="nav-link">Metrics</a>
+      <a href="#roles" class="nav-link">For institutions</a>
+    </nav>
+
+        <div class="nav-actions">
+          <button id="navLoginBtn" class="btn btn-ghost btn-sm" onclick="openModal('loginModal')">Log in</button>
+          <button id="navDemoBtn" class="btn btn-outline btn-sm" onclick="openModal('demoModal')">Launch Demo</button>
+          <button class="btn btn-primary btn-sm" onclick="openReportWizard()">Report an Issue</button>
+          <button id="navUserBtn" class="btn btn-secondary btn-sm" style="display:none;"></button>
+          <button id="navLogoutBtn" class="btn btn-ghost btn-sm" style="display:none;" onclick="logout()">Log out</button>
+          <button class="nav-toggle" id="navToggle" type="button" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobileNav" onclick="toggleMobileNav()">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+  </header>
+
+  <!-- Mobile navigation panel -->
+  <div class="mobile-nav" id="mobileNav" aria-hidden="true">
+    <nav class="mobile-nav__links" aria-label="Mobile">
+      <a href="#problem" class="mobile-nav__link">The problem</a>
+      <a href="#how" class="mobile-nav__link">How it works</a>
+      <a href="#liveImpact" class="mobile-nav__link" onclick="switchView('liveimpact'); return false;">Live impact</a>
+      <a href="#categories" class="mobile-nav__link">Categories</a>
+      <a href="#hotspots" class="mobile-nav__link">Hotspots</a>
+      <a href="#metrics" class="mobile-nav__link">Metrics</a>
+      <a href="#roles" class="mobile-nav__link">For institutions</a>
+    </nav>
+    <div class="mobile-nav__actions">
+      <button class="btn btn-ghost btn-block" onclick="openModal('loginModal')">Log in</button>
+      <button class="btn btn-primary btn-block" onclick="openReportWizard()">Report an issue</button>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       VIEW 1: PUBLIC LANDING PAGE
+       ========================================================================== -->
+  <main id="homeView" class="dashboard-view view-pane active">
+
+    <!-- ============================ HERO ============================ -->
+    <section class="hp-hero" id="top">
+      <div class="hp-hero__bg" aria-hidden="true"></div>
+      <div class="hp-hero__inner">
+        <div class="hp-hero__copy">
+          <span class="hp-eyebrow"><span class="pulse-dot"></span> CAMPUS ENVIRONMENTAL OPERATIONS</span>
+          <h1 class="hp-hero__title">A cleaner campus starts with <span>knowing what needs to be fixed.</span></h1>
+          <p class="hp-hero__lede">CIRCUVA closes the gap between seeing a campus problem and proving it was solved — connecting reports, operations, verification, and environmental performance in one system.</p>
+          <div class="hp-cta-row">
+            <button class="btn btn-primary btn-lg" onclick="openReportWizard()">Report an Issue</button>
+            <button class="btn btn-outline btn-lg" onclick="switchView('liveimpact')">Explore Live Impact</button>
+          </div>
+          <ul class="hp-trust" aria-label="Key capabilities">
+            <li>Real-time incident mapping</li>
+            <li>Closed-loop verification</li>
+            <li>ESG &amp; STARS reporting</li>
+          </ul>
+        </div>
+
+         <div class="hp-hero__visual">
+          <img class="hp-hero__photo" src="{{ photography.hero_campus }}" alt="A well-maintained university campus with green spaces and clean walkways" loading="eager">
+          <canvas id="heroTwin" class="hp-hero__twin" aria-hidden="true"></canvas>
+          <!-- Dashboard preview mock floating over the campus visual -->
+          <div class="hp-preview hp-preview--float" role="img" aria-label="Preview of the Circuva operations dashboard showing live incident metrics, a hotspot map, and a live activity feed.">
+            <div class="hp-preview__bar">
+              <span class="hp-preview__dot"></span><span class="hp-preview__dot"></span><span class="hp-preview__dot"></span>
+              <span class="hp-preview__title">Circuva — Operations Console</span>
+              <span class="hp-preview__tag">Sample data</span>
+            </div>
+            <div class="hp-preview__body">
+              <aside class="hp-preview__nav">
+                <span class="hp-preview__navitem is-active">Live Impact</span>
+                <span class="hp-preview__navitem">Incidents</span>
+                <span class="hp-preview__navitem">Hotspots</span>
+                <span class="hp-preview__navitem">Dispatch</span>
+                <span class="hp-preview__navitem">Reports</span>
+              </aside>
+              <div class="hp-preview__main">
+                <div class="hp-preview__tiles">
+                  <div class="hp-ptile"><span>Active</span><strong>24</strong></div>
+                  <div class="hp-ptile"><span>Resolved</span><strong>18</strong></div>
+                  <div class="hp-ptile"><span>Avg response</span><strong>3.8h</strong></div>
+                  <div class="hp-ptile"><span>Cleanliness</span><strong>87</strong></div>
+                </div>
+                <div class="hp-preview__chart" aria-hidden="true">
+                  <div class="hp-bar" style="height:40%"></div>
+                  <div class="hp-bar" style="height:65%"></div>
+                  <div class="hp-bar" style="height:50%"></div>
+                  <div class="hp-bar" style="height:80%"></div>
+                  <div class="hp-bar" style="height:60%"></div>
+                  <div class="hp-bar" style="height:92%"></div>
+                  <div class="hp-bar" style="height:72%"></div>
+                </div>
+                <ul class="hp-preview__feed">
+                  <li><span class="hp-dot hp-dot--crit"></span> CVA-2026-004828 · Illegal dumping · Admin Hall</li>
+                  <li><span class="hp-dot hp-dot--high"></span> CVA-2026-004821 · Overflowing bin · Cafeteria</li>
+                  <li><span class="hp-dot hp-dot--ok"></span> CVA-2026-004822 · Resolved · Eng. Quad</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+      <div class="hp-hero__stats" aria-label="Live sample statistics">
+        <div class="hp-stat"><strong id="heroActive">–</strong><span>Active reports</span></div>
+        <div class="hp-stat"><strong id="heroResolved">–</strong><span>Resolved</span></div>
+        <div class="hp-stat"><strong id="heroAvg">–</strong><span>Avg response</span></div>
+        <div class="hp-stat"><strong id="heroClean">–</strong><span>Resolution rate</span></div>
+      </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ PRODUCT PRINCIPLE ============================ -->
+    <section class="hp-principle" aria-label="Product principle">
+      <p>What gets seen can be fixed. What gets measured can be improved.</p>
+    </section>
+
+    <!-- ============================ PROBLEM ============================ -->
+    <section class="hp-section" id="problem">
+      <div class="hp-section__head">
+        <span class="hp-kicker">The operational blind spot</span>
+        <h2 class="hp-h2">Campus waste isn't a cleaning problem. It's an operations problem.</h2>
+        <p class="hp-sub">Most institutions can't see where issues start, how long they take to fix, or what they actually cost. Circuva makes the invisible visible — and accountable.</p>
+      </div>
+      <div class="hp-problem">
+        <article class="hp-probcard">
+          <img class="hp-media" src="{{ photography.overflowing_bin }}" alt="Overflowing waste bin beside a campus dining hall" loading="lazy">
+          <h3>No real-time visibility</h3>
+          <p>Overflowing bins and illegal dumping go unnoticed for days because reports live in group chats and scattered email threads.</p>
+        </article>
+        <article class="hp-probcard">
+          <img class="hp-media" src="{{ photography.recycling_station }}" alt="Recycling station contaminated with mixed waste" loading="lazy">
+          <h3>Contamination &amp; lost targets</h3>
+          <p>Segregation failures quietly degrade sustainability metrics and trigger avoidable landfill penalties.</p>
+        </article>
+        <article class="hp-probcard">
+          <img class="hp-media" src="{{ photography.illegal_dumping }}" alt="Illegal dumping behind a campus administration building" loading="lazy">
+          <h3>Recurring hotspots</h3>
+          <p>Without spatial intelligence, the same courtyards and building basements become repeat offenders.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============================ LIVE IMPACT ============================ -->
+    <section class="hp-section hp-impact" id="liveImpact">
+      <div class="hp-section__head">
+        <span class="hp-kicker">Live impact <span class="hp-demo-badge">Sample campus dataset</span></span>
+        <h2 class="hp-h2">A living picture of campus operations</h2>
+        <p class="hp-sub">The figures below are generated from the bundled demo dataset — a realistic stand-in for a live Circuva deployment, not real institutional data.</p>
+      </div>
+      <div class="hp-metricgrid">
+        <div class="hp-metric"><span class="hp-metric__num" id="livActive">–</span><span class="hp-metric__label">Total reports</span></div>
+        <div class="hp-metric"><span class="hp-metric__num" id="livResolved">–</span><span class="hp-metric__label">Resolved reports</span></div>
+        <div class="hp-metric"><span class="hp-metric__num" id="livHotspots">–</span><span class="hp-metric__label">Recurring hotspots</span></div>
+        <div class="hp-metric"><span class="hp-metric__num" id="livAvg">–</span><span class="hp-metric__label">Avg. response time</span></div>
+        <div class="hp-metric"><span class="hp-metric__num" id="livContam">–</span><span class="hp-metric__label">Contamination incidents</span></div>
+        <div class="hp-metric"><span class="hp-metric__num" id="livClean">–</span><span class="hp-metric__label">Resolution rate</span></div>
+      </div>
+      <div class="hp-impact__cta">
+        <button class="btn btn-primary" onclick="switchView('liveimpact')">Open the operations dashboard</button>
+        <a class="hp-link" href="#metrics">See full impact metrics →</a>
+      </div>
+    </section>
+
+    <!-- ============================ HOW IT WORKS ============================ -->
+    <section class="hp-section" id="how">
+      <div class="hp-section__head">
+        <span class="hp-kicker">Closed-loop workflow</span>
+        <h2 class="hp-h2">From spotted issue to verified resolution</h2>
+        <p class="hp-sub">One continuous loop connects your community, your operations team, and your administrators — with a full audit trail at every step.</p>
+      </div>
+      <ol class="hp-steps">
+        <li class="hp-step">
+          <span class="hp-step__num">01</span>
+          <h3>Spot</h3>
+          <p>Any student or staff member notices an environmental issue on campus grounds.</p>
+        </li>
+        <li class="hp-step">
+          <span class="hp-step__num">02</span>
+          <h3>Report</h3>
+          <p>They submit photo evidence, location, and severity in under 60 seconds — no account friction.</p>
+        </li>
+        <li class="hp-step">
+          <span class="hp-step__num">03</span>
+          <h3>Dispatch</h3>
+          <p>Facility leads receive prioritised dispatch and route the right worker to the right place.</p>
+        </li>
+        <li class="hp-step">
+          <span class="hp-step__num">04</span>
+          <h3>Resolve</h3>
+          <p>The team cleans up, uploads proof, and the incident is closed with a verified record.</p>
+        </li>
+        <li class="hp-step">
+          <span class="hp-step__num">05</span>
+          <h3>Verify</h3>
+          <p>The original reporter confirms the fix — locking in data integrity and impact points.</p>
+        </li>
+      </ol>
+    </section>
+
+    <!-- ============================ CATEGORIES ============================ -->
+    <section class="hp-section hp-cats" id="categories">
+      <div class="hp-section__head">
+        <span class="hp-kicker">What gets reported</span>
+        <h2 class="hp-h2">Every category of campus waste, in one system</h2>
+        <p class="hp-sub">Tap any category to start a report — Circuva routes it to the right team automatically.</p>
+      </div>
+      <div class="hp-catgrid">
+        <button class="hp-cat" onclick="openReportWizard()">
+          <img class="hp-media" src="{{ photography.overflowing_bin }}" alt="Overflowing waste bin" loading="lazy">
+          <span class="hp-cat__name">Overflowing Bins</span>
+          <span class="hp-cat__desc">Collections missed or capacity exceeded</span>
+        </button>
+        <button class="hp-cat" onclick="openReportWizard()">
+          <img class="hp-media" src="{{ photography.recycling_station }}" alt="Contaminated recycling station" loading="lazy">
+          <span class="hp-cat__name">Recycling Contamination</span>
+          <span class="hp-cat__desc">Wrong items in sorting streams</span>
+        </button>
+        <button class="hp-cat" onclick="openReportWizard()">
+          <img class="hp-media" src="{{ photography.litter_outdoor }}" alt="Litter scattered across campus grounds" loading="lazy">
+          <span class="hp-cat__name">Litter</span>
+          <span class="hp-cat__desc">Windblown or dropped refuse</span>
+        </button>
+        <button class="hp-cat" onclick="openReportWizard()">
+          <img class="hp-media" src="{{ photography.illegal_dumping }}" alt="Illegal dumping of furniture and pallets" loading="lazy">
+          <span class="hp-cat__name">Illegal Dumping</span>
+          <span class="hp-cat__desc">Unauthorised bulk waste</span>
+        </button>
+        <button class="hp-cat" onclick="openReportWizard()">
+          <img class="hp-media" src="{{ photography.plastic_waste }}" alt="Accumulated plastic packaging waste" loading="lazy">
+          <span class="hp-cat__name">Plastic Waste</span>
+          <span class="hp-cat__desc">Packaging &amp; single-use items</span>
+        </button>
+        <button class="hp-cat" onclick="openReportWizard()">
+          <img class="hp-media" src="{{ photography.food_waste }}" alt="Food waste from campus catering" loading="lazy">
+          <span class="hp-cat__name">Food Waste</span>
+          <span class="hp-cat__desc">Catering &amp; leftover disposal</span>
+        </button>
+        <button class="hp-cat" onclick="openReportWizard()">
+          <img class="hp-media" src="{{ photography.e_waste }}" alt="Discarded electronics and e-waste" loading="lazy">
+          <span class="hp-cat__name">E-Waste</span>
+          <span class="hp-cat__desc">Electronics &amp; cabling</span>
+        </button>
+        <button class="hp-cat" onclick="openReportWizard()">
+          <img class="hp-media" src="{{ photography.waste_bins }}" alt="Broken or damaged waste bin" loading="lazy">
+          <span class="hp-cat__name">Broken Bins</span>
+          <span class="hp-cat__desc">Damaged or missing infrastructure</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================ HOTSPOTS ============================ -->
+    <section class="hp-section hp-hotspots" id="hotspots">
+      <div class="hp-section__head">
+        <span class="hp-kicker">Spatial intelligence <span class="hp-demo-badge">Sample campus dataset</span></span>
+        <h2 class="hp-h2">Campus hotspot visualization</h2>
+        <p class="hp-sub">Every report is geolocated and colour-coded by severity, so operations teams see exactly where attention is needed — in real time.</p>
+      </div>
+      <div class="hp-hotgrid">
+        <div class="hp-map-wrap">
+          <div class="map-filters" id="mapFilters" role="group" aria-label="Filter incidents by category">
+            <button type="button" class="map-filter is-active" data-filter="all">All</button>
+            <button type="button" class="map-filter" data-filter="waste">Waste</button>
+            <button type="button" class="map-filter" data-filter="water">Water</button>
+            <button type="button" class="map-filter" data-filter="cleanliness">Cleanliness</button>
+            <button type="button" class="map-filter" data-filter="energy">Energy</button>
+            <button type="button" class="map-filter" data-filter="infrastructure">Infrastructure</button>
+          </div>
+          <div class="campusmap" id="campusMap" role="application" aria-label="Interactive map of campus incident reports"></div>
+          <span class="map-demo-label">Sample campus incident data</span>
+        </div>
+        <aside class="hp-hotlist" aria-label="Recurring hotspots">
+          <h3 class="hp-hotlist__title">Recurring hotspots</h3>
+          <ul class="hp-hotlist__items">
+            <li class="hp-hotitem">
+              <div>
+                <span class="hp-hotitem__zone">Cafeteria &amp; Dining Plaza</span>
+                <span class="hp-hotitem__meta">Student Center North · 42 reports</span>
+              </div>
+              <span class="hp-trend hp-trend--up">↑ 28%</span>
+            </li>
+            <li class="hp-hotitem">
+              <div>
+                <span class="hp-hotitem__zone">Engineering Quadrangle</span>
+                <span class="hp-hotitem__meta">Engineering Block B · 29 reports</span>
+              </div>
+              <span class="hp-trend hp-trend--up">↑ 14%</span>
+            </li>
+            <li class="hp-hotitem">
+              <div>
+                <span class="hp-hotitem__zone">Residential Hostel Complex</span>
+                <span class="hp-hotitem__meta">Hostel B &amp; C Courtyard · 24 reports</span>
+              </div>
+              <span class="hp-trend hp-trend--down">↓ 8%</span>
+            </li>
+            <li class="hp-hotitem">
+              <div>
+                <span class="hp-hotitem__zone">Central Library &amp; Study Grounds</span>
+                <span class="hp-hotitem__meta">Main Library East Wing · 18 reports</span>
+              </div>
+              <span class="hp-trend hp-trend--down">↓ 19%</span>
+            </li>
+          </ul>
+          <button class="btn btn-outline btn-sm" onclick="switchView('admin')">View hotspots in dashboard</button>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ============================ REAL-TIME WORKFLOW ============================ -->
+    <section class="hp-section hp-workflow">
+      <div class="hp-section__head">
+        <span class="hp-kicker">Real-time, verified</span>
+        <h2 class="hp-h2">See the loop close</h2>
+        <p class="hp-sub">A reported issue becomes a tracked, photographed, and verified resolution — with proof on both sides of the cleanup.</p>
+      </div>
+      <div class="hp-workflow__grid">
+        <div class="hp-workflow__steps">
+          <div class="hp-wfstep"><span class="hp-wfstep__dot"></span><div><strong>Reported</strong><p>Photo, location and severity captured in seconds.</p></div></div>
+          <div class="hp-wfstep"><span class="hp-wfstep__dot"></span><div><strong>Dispatched</strong><p>Routed to the closest available operations worker.</p></div></div>
+          <div class="hp-wfstep"><span class="hp-wfstep__dot"></span><div><strong>Resolved</strong><p>Cleanup completed with an after-photo upload.</p></div></div>
+          <div class="hp-wfstep"><span class="hp-wfstep__dot"></span><div><strong>Verified</strong><p>Reporter confirms the fix and impact is recorded.</p></div></div>
+        </div>
+        <div class="hp-workflow__slider">
+          <div class="before-after-container" id="beforeAfterContainer">
+            <!-- Before Dirty Image -->
+            <img src="{{ photography.before_dirty }}" class="ba-img ba-before" alt="Campus area before cleanup, showing accumulated waste">
+            <span class="ba-badge ba-badge-before">BEFORE</span>
+
+            <!-- After Clean Wrapper -->
+            <div class="ba-after-wrapper" id="baAfterWrapper">
+              <img src="{{ photography.after_clean }}" class="ba-img" alt="Same campus area after cleanup, restored and clear">
+              <span class="ba-badge ba-badge-after">AFTER</span>
+            </div>
+
+            <!-- Slider Handle -->
+            <div class="ba-slider-handle" id="baHandle" role="slider" aria-label="Compare before and after cleanup" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" tabindex="0">↔</div>
+          </div>
+          <p class="hp-workflow__hint">Drag the handle to compare reported vs. resolved.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ IMPACT METRICS ============================ -->
+    <section class="hp-section hp-metrics" id="metrics">
+      <div class="hp-section__head">
+        <span class="hp-kicker">Impact &amp; performance <span class="hp-demo-badge">Sample campus dataset</span></span>
+        <h2 class="hp-h2">Outcomes you can put in a report</h2>
+        <p class="hp-sub">Circuva turns day-to-day operations into auditable sustainability and efficiency metrics — ready for ESG, STARS and leadership reporting.</p>
+      </div>
+      <div class="hp-metricbig">
+        <div class="hp-score" role="img" aria-label="Resolution rate">
+          <div class="hp-score__ring" id="mScoreRing" style="--val:0;">
+            <span class="hp-score__num" id="mClean">–</span>
+          </div>
+          <div class="hp-score__meta">
+            <strong>Resolution rate</strong>
+            <span>Share of reported issues marked resolved or verified</span>
+          </div>
+        </div>
+        <div class="hp-mini">
+          <div class="hp-mini__item"><span class="hp-mini__num" id="mAvg">–</span><span class="hp-mini__label">Avg. response time</span></div>
+          <div class="hp-mini__item"><span class="hp-mini__num" id="mRate">–</span><span class="hp-mini__label">Resolution rate</span></div>
+          <div class="hp-mini__item"><span class="hp-mini__num" id="mResolved">–</span><span class="hp-mini__label">Reports resolved</span></div>
+          <div class="hp-mini__item"><span class="hp-mini__num" id="mTotal">–</span><span class="hp-mini__label">Total reports</span></div>
+        </div>
+      </div>
+      <div class="hp-trendblock">
+        <div class="hp-trendblock__head"><span>Reported vs. resolved — last 7 days</span><span class="hp-demo-badge">Sample</span></div>
+        <div class="hp-bars" aria-hidden="true">
+          <div class="hp-bars__col"><span class="hp-bars__rep" style="height:60%"></span><span class="hp-bars__res" style="height:50%"></span></div>
+          <div class="hp-bars__col"><span class="hp-bars__rep" style="height:78%"></span><span class="hp-bars__res" style="height:66%"></span></div>
+          <div class="hp-bars__col"><span class="hp-bars__rep" style="height:66%"></span><span class="hp-bars__res" style="height:60%"></span></div>
+          <div class="hp-bars__col"><span class="hp-bars__rep" style="height:88%"></span><span class="hp-bars__res" style="height:82%"></span></div>
+          <div class="hp-bars__col"><span class="hp-bars__rep" style="height:74%"></span><span class="hp-bars__res" style="height:64%"></span></div>
+          <div class="hp-bars__col"><span class="hp-bars__rep" style="height:42%"></span><span class="hp-bars__res" style="height:36%"></span></div>
+          <div class="hp-bars__col"><span class="hp-bars__rep" style="height:58%"></span><span class="hp-bars__res" style="height:50%"></span></div>
+        </div>
+        <div class="hp-bars__legend"><span><i class="hp-legend hp-legend--rep"></i> Reported</span><span><i class="hp-legend hp-legend--res"></i> Resolved</span></div>
+      </div>
+    </section>
+
+    <!-- ============================ INTERACTIVE 3D CAMPUS ============================ -->
+    <section class="hp-section hp-video" id="video">
+      <div class="hp-section__head">
+        <span class="hp-kicker">Live operations</span>
+        <h2 class="hp-h2">Interactive campus view</h2>
+        <p class="hp-sub">A live digital model of campus operations — every marker is a reported environmental issue. Sample campus incident data, not a live university feed.</p>
+      </div>
+      <div class="hp-video__frame">
+        <div class="campusmap campusmap--feature" id="campusView" role="application" aria-label="Interactive campus incident map"></div>
+      </div>
+      <p class="hp-video__note">Click a marker for incident details · colour-coded by status &amp; severity · Sample campus incident data</p>
+    </section>
+
+    <!-- ============================ ROLES ============================ -->
+    <section class="hp-section hp-roles" id="roles">
+      <div class="hp-section__head">
+        <span class="hp-kicker">One platform, every role</span>
+        <h2 class="hp-h2">Built for the people who keep campus running</h2>
+        <p class="hp-sub">A single source of truth across students, operations teams, and administration.</p>
+      </div>
+      <div class="hp-rolegrid">
+        <article class="hp-role">
+          <span class="hp-role__icon" aria-hidden="true">🎓</span>
+          <h3>Student &amp; Staff Reporter</h3>
+          <p>Spot an issue, snap a photo, and send it in seconds — then verify the cleanup and earn impact points.</p>
+          <button class="btn btn-outline btn-sm" onclick="openModal('loginModal')">Log in as reporter</button>
+        </article>
+        <article class="hp-role">
+          <span class="hp-role__icon" aria-hidden="true">🧹</span>
+          <h3>Facility Operations</h3>
+          <p>Receive prioritised dispatch, work through assigned tasks, and close them out with photo proof.</p>
+          <button class="btn btn-outline btn-sm" onclick="openModal('loginModal')">Log in as operations</button>
+        </article>
+        <article class="hp-role">
+          <span class="hp-role__icon" aria-hidden="true">🏢</span>
+          <h3>Campus Administrator</h3>
+          <p>See live hotspots, track SLA performance, dispatch teams, and export verified ESG reports.</p>
+          <button class="btn btn-primary btn-sm" onclick="loginAsDemo('admin')">Explore admin demo</button>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============================ FINAL CTA ============================ -->
+    <section class="hp-cta">
+      <div class="hp-cta__inner">
+        <h2>Make every campus issue visible. Make every resolution measurable.</h2>
+        <p>Circuva gives your community a voice and your operations team a system — close the loop on campus environmental health.</p>
+        <div class="hp-cta__row">
+          <button class="btn btn-primary btn-lg" onclick="openModal('loginModal')">Start free trial</button>
+          <button class="btn btn-outline btn-lg" onclick="loginAsDemo('admin')">Book a live demo</button>
+          <button class="btn btn-ghost btn-lg" onclick="openReportWizard()">Report an issue</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==========================================================================
+       VIEW 2: STUDENT / STAFF DASHBOARD
+       ========================================================================== -->
+  <main id="studentView" class="dashboard-view">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px;">
+      <div>
+        <h2>Student / Staff Portal</h2>
+        <p style="color:var(--color-slate-500); font-size:14px;">Track your submitted reports and verify facility cleanups.</p>
+      </div>
+      <button onclick="openReportWizard()" class="btn btn-primary">+ Submit New Report</button>
+    </div>
+
+    <!-- Overview Metric Cards -->
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="metric-label">Total Reports Logged</div>
+        <div class="metric-val" id="stuTotal">–</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Resolved Cleanups</div>
+        <div class="metric-val" style="color:var(--color-emerald-600);" id="stuResolved">–</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">In Progress</div>
+        <div class="metric-val" style="color:var(--color-blue-600);" id="stuInProgress">–</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Impact Score Points</div>
+        <div class="metric-val" style="color:var(--color-lime-500);" id="userImpactScore">45</div>
+      </div>
+    </div>
+
+    <!-- My Reports Table -->
+    <div class="card">
+      <h3 style="margin-bottom:20px;">My Submitted Reports</h3>
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Report ID</th>
+              <th>Category</th>
+              <th>Location</th>
+              <th>Severity</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="studentReportsTbody">
+            <!-- Dynamically populated via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- ==========================================================================
+       VIEW: FACULTY / STAFF MONITOR
+       ========================================================================== -->
+  <main id="facultyView" class="dashboard-view">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px;">
+      <div>
+        <h2>Faculty &amp; Staff — Campus Monitor</h2>
+        <p style="color:var(--color-slate-500); font-size:14px;">Monitor campus reports, see what's nearby, and stay informed.</p>
+      </div>
+      <span class="badge badge-low">FACULTY VIEW</span>
+    </div>
+
+    <div class="metrics-row" id="facultyMetrics">
+      <div class="metric-card"><div class="metric-label">Campus Reports</div><div class="metric-val" id="facTotal">–</div></div>
+      <div class="metric-card"><div class="metric-label">Nearby Issues</div><div class="metric-val" style="color:var(--color-blue-600);" id="facNearby">–</div></div>
+      <div class="metric-card"><div class="metric-label">Resolved</div><div class="metric-val" style="color:var(--color-emerald-600);" id="facResolved">–</div></div>
+      <div class="metric-card"><div class="metric-label">Critical</div><div class="metric-val" style="color:var(--color-red-500);" id="facCritical">–</div></div>
+    </div>
+
+    <div class="dash-grid-2">
+      <div>
+        <div class="card" style="margin-bottom:32px;">
+          <h3 style="margin-bottom:20px;">Campus Report Monitor</h3>
+          <div class="table-container">
+            <table class="table">
+              <thead><tr><th>Code</th><th>Category</th><th>Location</th><th>Severity</th><th>Status</th></tr></thead>
+              <tbody id="facultyReportsTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <aside>
+        <div class="card" style="margin-bottom:32px;">
+          <h3 style="margin-bottom:16px;">📍 Nearby Issues</h3>
+          <div id="facultyNearbyList" style="display:flex; flex-direction:column; gap:10px;"></div>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom:12px;">🏫 Campus Information</h3>
+          <ul style="font-size:14px; color:var(--color-slate-600); line-height:1.9; padding-left:18px;">
+            <li>Greenfield University — Sample Campus</li>
+            <li>Sustainability target: 90% diversion rate</li>
+            <li>Reporting hotline: in-app + QR codes on bins</li>
+            <li>Facilities desk: open 07:00–21:00</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <!-- ==========================================================================
+       VIEW 3: ADMIN OPERATIONS DASHBOARD
+       ========================================================================== -->
+  <main id="adminView" class="dashboard-view">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px;">
+      <div>
+        <h2>Campus Operations & Analytics Dashboard</h2>
+        <p style="color:var(--color-slate-500); font-size:14px;">Real-time incident dispatch, severity distribution, and hotspot intelligence.</p>
+      </div>
+      <span class="badge badge-high">SAMPLE DATASET</span>
+    </div>
+
+    <!-- Top SaaS Metrics -->
+    <div class="metrics-row" id="adminMetrics">
+      <div class="metric-card"><div class="metric-label">Total Incidents</div><div class="metric-val" id="admTotal">–</div></div>
+      <div class="metric-card"><div class="metric-label">Open Issues</div><div class="metric-val" style="color:var(--color-amber-500);" id="admActive">–</div></div>
+      <div class="metric-card"><div class="metric-label">Critical Alerts</div><div class="metric-val" style="color:var(--color-red-500);" id="admCritical">–</div></div>
+      <div class="metric-card"><div class="metric-label">Resolution Rate</div><div class="metric-val" style="color:var(--color-emerald-600);" id="admRate">–</div></div>
+      <div class="metric-card"><div class="metric-label">Avg Response</div><div class="metric-val" id="admAvg">–</div></div>
+      <div class="metric-card"><div class="metric-label">Your Impact</div><div class="metric-val" id="admImpact">–</div></div>
+    </div>
+
+    <div class="dash-grid-2">
+      <!-- Incident Management Table -->
+      <div>
+        <div class="card" style="margin-bottom:32px;">
+          <h3 style="margin-bottom:16px;">Filters</h3>
+          <div id="adminFilter"></div>
+        </div>
+        <div class="card" style="margin-bottom:32px;">
+          <h3 style="margin-bottom:20px;">Incident Dispatch Feed</h3>
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Category</th>
+                  <th>Location</th>
+                  <th>Severity</th>
+                  <th>Status</th>
+                  <th>Reporter</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="adminReportsTbody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Hotspots Intelligence Section -->
+        <div class="card">
+          <h3 style="margin-bottom:16px;">🔥 High-Frequency Operational Hotspots</h3>
+          <div id="adminHotspots"></div>
+        </div>
+      </div>
+
+      <!-- Right Column: Live Feed & Analytics Charts -->
+      <div>
+        <!-- Live Incident Feed Stream -->
+        <div class="card" style="margin-bottom:32px;">
+          <h3>⚡ Live Activity Stream</h3>
+          <div id="liveIncidentFeed" style="margin-top:16px;">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Chart 1: Categories -->
+        <div class="card" style="margin-bottom:24px;">
+           <h4 style="font-size:14px; margin-bottom:12px;">Reports by Category</h4>
+          <canvas id="chartCategories" height="200"></canvas>
+        </div>
+
+        <!-- Chart 2: Severity -->
+        <div class="card" style="margin-bottom:24px;">
+          <h4 style="font-size:14px; margin-bottom:12px;">Severity Distribution</h4>
+          <canvas id="chartSeverity" height="200"></canvas>
+        </div>
+
+        <!-- Chart 3: Weekly Trend -->
+        <div class="card">
+          <h4 style="font-size:14px; margin-bottom:12px;">Weekly Trend (Reported vs Resolved)</h4>
+          <canvas id="chartWeekly" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ==========================================================================
+        VIEW 4: FACILITY TEAM DASHBOARD
+        ========================================================================== -->
+  <main id="facilitiesView" class="dashboard-view">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px;">
+      <div>
+        <h2>Facility Operations Team Portal</h2>
+        <p style="color:var(--color-slate-500); font-size:14px;">Assigned tasks, work execution, and resolution photo uploads.</p>
+      </div>
+      <span class="badge badge-in_progress">Marcus Vance (Staff)</span>
+    </div>
+
+    <div class="metrics-row">
+      <div class="metric-card"><div class="metric-label">Incoming Tasks</div><div class="metric-val" id="facIncoming">–</div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:32px;">
+      <h3 style="margin-bottom:16px;">Filters</h3>
+      <div id="facilityFilter"></div>
+    </div>
+
+    <!-- Assigned Tasks List Container -->
+    <div id="facilityTasksContainer">
+      <!-- Dynamically populated -->
+    </div>
+  </main>
+
+  <!-- ==========================================================================
+        VIEW 5: LIVE IMPACT DASHBOARD
+        ========================================================================== -->
+  <main id="liveImpactView" class="dashboard-view">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px;">
+      <div>
+        <h2>Live Campus Impact</h2>
+        <p style="color:var(--color-slate-500); font-size:14px;">Real-time operations intelligence across Greenfield University.</p>
+      </div>
+      <span class="badge badge-high">LIVE</span>
+    </div>
+
+    <div class="metrics-row" id="liMetrics"></div>
+
+    <div class="dash-grid-2">
+      <div>
+        <div class="card" style="margin-bottom:32px;">
+          <h3 style="margin-bottom:16px;">Filters</h3>
+          <div id="liFilter"></div>
+        </div>
+        <div class="card" style="margin-bottom:32px;">
+          <h3 style="margin-bottom:20px;">Recent Reports</h3>
+          <div id="liRecent"></div>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom:16px;">🔥 Operational Hotspots</h3>
+          <div id="liHotspots"></div>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:32px;">
+          <h3>⚡ Live Activity Stream</h3>
+          <div id="liActivity" style="margin-top:16px;"></div>
+        </div>
+        <div class="card" style="margin-bottom:24px;">
+          <h4 style="font-size:14px; margin-bottom:12px;">Reports by Category</h4>
+          <canvas id="liCategoryChart" height="200"></canvas>
+        </div>
+        <div class="card" style="margin-bottom:24px;">
+          <h4 style="font-size:14px; margin-bottom:12px;">Severity Distribution</h4>
+          <canvas id="liSeverityChart" height="200"></canvas>
+        </div>
+        <div class="card" style="margin-bottom:24px;">
+          <h4 style="font-size:14px; margin-bottom:12px;">Weekly Trend (Reported vs Resolved)</h4>
+          <canvas id="liTrendChart" height="200"></canvas>
+        </div>
+        <div class="card">
+          <h4 style="font-size:14px; margin-bottom:12px;">Campus Map</h4>
+          <div class="campusmap" id="liveImpactMap" style="height:340px;"></div>
+          <span class="map-demo-label">Sample campus incident data</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ==========================================================================
+        MODAL 1: MULTI-STEP WASTE REPORTING WIZARD
+       ========================================================================== -->
+  <div class="modal-overlay" id="reportWizardModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Report an Environmental Issue</h3>
+        <button onclick="closeModal('reportWizardModal')" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Progress Steps Bar -->
+        <div class="wizard-steps">
+          <div class="wizard-step-item active" id="stepHead1">
+            <div class="wizard-step-num">1</div>
+            <span>Category</span>
+          </div>
+          <div class="wizard-step-item" id="stepHead2">
+            <div class="wizard-step-num">2</div>
+            <span>Location</span>
+          </div>
+          <div class="wizard-step-item" id="stepHead3">
+            <div class="wizard-step-num">3</div>
+            <span>Severity</span>
+          </div>
+          <div class="wizard-step-item" id="stepHead4">
+            <div class="wizard-step-num">4</div>
+            <span>Evidence</span>
+          </div>
+          <div class="wizard-step-item" id="stepHead5">
+            <div class="wizard-step-num">5</div>
+            <span>Complete</span>
+          </div>
+        </div>
+
+        <!-- Step 1: Category Selection -->
+        <div id="wizardStep1">
+          <h4 style="margin-bottom:12px;">Step 1 — What did you find?</h4>
+          <div class="category-grid">
+            <div class="category-card-opt selected" onclick="selectCategory('Overflowing Bin', this)">
+              <div class="category-icon">🗑️</div>
+              <div style="font-size:13px; font-weight:600;">Overflowing Bin</div>
+            </div>
+            <div class="category-card-opt" onclick="selectCategory('Litter', this)">
+              <div class="category-icon">🍂</div>
+              <div style="font-size:13px; font-weight:600;">Litter</div>
+            </div>
+            <div class="category-card-opt" onclick="selectCategory('Illegal Dumping', this)">
+              <div class="category-icon">📦</div>
+              <div style="font-size:13px; font-weight:600;">Illegal Dumping</div>
+            </div>
+            <div class="category-card-opt" onclick="selectCategory('Plastic Waste', this)">
+              <div class="category-icon">🥤</div>
+              <div style="font-size:13px; font-weight:600;">Plastic Waste</div>
+            </div>
+            <div class="category-card-opt" onclick="selectCategory('Food Waste', this)">
+              <div class="category-icon">🍕</div>
+              <div style="font-size:13px; font-weight:600;">Food Waste</div>
+            </div>
+            <div class="category-card-opt" onclick="selectCategory('E-Waste', this)">
+              <div class="category-icon">💻</div>
+              <div style="font-size:13px; font-weight:600;">E-Waste</div>
+            </div>
+            <div class="category-card-opt" onclick="selectCategory('Poor Waste Segregation', this)">
+              <div class="category-icon">♻️</div>
+              <div style="font-size:13px; font-weight:600;">Segregation Issue</div>
+            </div>
+            <div class="category-card-opt" onclick="selectCategory('Broken Bin', this)">
+              <div class="category-icon">🛠️</div>
+              <div style="font-size:13px; font-weight:600;">Broken Bin</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Location Selection -->
+        <div id="wizardStep2" style="display:none;">
+          <h4 style="margin-bottom:12px;">Step 2 — Where is it located?</h4>
+          <div class="form-group">
+            <label class="form-label">Campus Building / Zone</label>
+            <select id="reportBuildingSelect" class="form-control">
+              <option value="Student Cafeteria — North Entrance">Student Cafeteria — North Entrance</option>
+              <option value="Engineering Block B Quad">Engineering Block B Quad</option>
+              <option value="Student Center Terrace">Student Center Terrace</option>
+              <option value="Science Complex Basement Corridor">Science Complex Basement Corridor</option>
+              <option value="Main Library East Lawn">Main Library East Lawn</option>
+              <option value="Hostel B Courtyard">Hostel B Courtyard</option>
+              <option value="Athletic Field Walkway">Athletic Field Walkway</option>
+              <option value="Administration Rear Loading Dock">Administration Rear Loading Dock</option>
+            </select>
+          </div>
+          <button onclick="useCurrentLocationGPS()" class="btn btn-secondary btn-sm" style="width:100%;">📍 Use Current Browser GPS Location</button>
+        </div>
+
+        <!-- Step 3: Severity Rating -->
+        <div id="wizardStep3" style="display:none;">
+          <h4 style="margin-bottom:12px;">Step 3 — How severe is the issue?</h4>
+          <div class="severity-picker">
+            <div class="severity-btn" data-sev="Low" onclick="selectSeverity('Low', this)">Low</div>
+            <div class="severity-btn" data-sev="Medium" onclick="selectSeverity('Medium', this)">Medium</div>
+            <div class="severity-btn selected" data-sev="High" onclick="selectSeverity('High', this)">High</div>
+            <div class="severity-btn" data-sev="Critical" onclick="selectSeverity('Critical', this)">Critical</div>
+          </div>
+        </div>
+
+        <!-- Step 4: Evidence & Upload -->
+        <div id="wizardStep4" style="display:none;">
+          <h4 style="margin-bottom:12px;">Step 4 — Add evidence & details</h4>
+          <div class="form-group">
+            <label class="form-label">Upload Evidence Photos</label>
+            <input type="file" id="reportFileInput" class="form-control" accept="image/*" multiple onchange="handlePhotoUpload(event)">
+            <div id="uploadPreviewBox" style="display:flex; gap:10px; margin-top:10px;"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Problem Description</label>
+            <textarea id="reportDescInput" class="form-control" rows="3" placeholder="Provide any details about the issue..."></textarea>
+          </div>
+        </div>
+
+        <!-- Step 5: Submission Confirmation -->
+        <div id="wizardStep5" style="display:none; text-align:center;">
+          <div style="font-size:48px; margin-bottom:12px;">✅</div>
+          <h2>Report Submitted!</h2>
+          <p style="color:var(--color-slate-600); margin:8px 0 20px;">Unique Tracking Number:</p>
+           <div style="font-family:var(--font-heading); font-size:24px; font-weight:800; color:var(--color-emerald-600); background:var(--color-emerald-50); padding:12px 24px; border-radius:var(--radius-md); display:inline-block; margin-bottom:20px;" id="submittedReportCode">
+            CVA-2026-004821
+          </div>
+          <div id="wizardSummaryBox" style="background:var(--color-slate-50); padding:16px; border-radius:var(--radius-md); text-align:left;"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="wizardBackBtn" class="btn btn-secondary" onclick="wizardGo(-1)" style="display:none;">Back</button>
+        <div></div>
+        <button id="wizardNextBtn" class="btn btn-primary" onclick="wizardGo(1)">Next Step →</button>
+        <button id="wizardSubmitBtn" class="btn btn-primary" onclick="submitReport()" style="display:none;">Submit Report</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL 2: REPORT DETAILS & TIMELINE INSPECTOR
+       ========================================================================== -->
+  <div class="modal-overlay" id="reportDetailsModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Report Details & Timeline</h3>
+        <button onclick="closeModal('reportDetailsModal')" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
+      </div>
+      <div class="modal-body" id="reportDetailsBody">
+        <!-- Dynamically populated -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL 3: REPORTER VERIFICATION DIALOG
+       ========================================================================== -->
+  <div class="modal-overlay" id="verificationModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Resolution Verification</h3>
+        <button onclick="closeModal('verificationModal')" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
+      </div>
+      <div class="modal-body">
+        <h4 style="font-size:18px; margin-bottom:8px;">Was this issue actually resolved?</h4>
+        <p style="color:var(--color-slate-600); font-size:14px; margin-bottom:20px;">The facility team marked this incident as clean. Please verify the result on ground.</p>
+        
+        <div class="form-group">
+          <label class="form-label">Feedback (Optional)</label>
+          <textarea id="verifyFeedbackInput" class="form-control" rows="2" placeholder="Add feedback..."></textarea>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <button onclick="submitVerification(true)" class="btn btn-primary" style="padding:14px;">Yes, Completely Resolved (+10 Pts)</button>
+          <button onclick="submitVerification(false)" class="btn btn-secondary" style="color:var(--color-red-600); border-color:var(--color-red-500); padding:14px;">Not Resolved (Reopen Incident)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL 4: ADMIN TASK DISPATCH
+       ========================================================================== -->
+  <div class="modal-overlay" id="dispatchModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Dispatch Facility Operations Worker</h3>
+        <button onclick="closeModal('dispatchModal')" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Assign Worker</label>
+          <select id="dispatchWorkerSelect" class="form-control">
+             <option value="2">Marcus Vance (Facility Operations Team A)</option>
+            <option value="3">Elena Rostova (Facility Recycling Team B)</option>
+          </select>
+        </div>
+        <button onclick="submitDispatch()" class="btn btn-primary" style="width:100%;">Confirm Task Dispatch</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL 5: WORKER RESOLUTION UPLOAD
+       ========================================================================== -->
+  <div class="modal-overlay" id="resolveTaskModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Submit Task Resolution</h3>
+        <button onclick="closeModal('resolveTaskModal')" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Upload After Photo (Proof of Cleanliness)</label>
+          <input type="file" id="resolutionAfterFile" class="form-control" accept="image/*">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Resolution Notes</label>
+          <textarea id="resolutionNotesInput" class="form-control" rows="3" placeholder="Notes on actions taken..."></textarea>
+        </div>
+        <button onclick="submitWorkerResolution()" class="btn btn-primary" style="width:100%;">Mark Issue Resolved</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+        MODAL 5B: STATUS UPDATE
+        ========================================================================== -->
+  <div class="modal-overlay" id="setStatusModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Update Report Status</h3>
+        <button onclick="closeModal('setStatusModal')" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">New Status</label>
+          <select id="setStatusSelect" class="form-control"></select>
+        </div>
+        <button onclick="uiApplyStatus()" class="btn btn-primary" style="width:100%;">Apply Status</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL 6: SIGN IN (real authentication)
+       ========================================================================== -->
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Sign in to Circuva</h3>
+        <button onclick="closeModal('loginModal')" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="hp-modal-sub">Use your Circuva account to access live campus operations.</p>
+        <form id="loginForm" onsubmit="return doLogin(event)" novalidate>
+          <div class="hp-field">
+            <label for="loginEmail">Email</label>
+            <input id="loginEmail" type="email" autocomplete="email" placeholder="you@university.edu" required>
+          </div>
+          <div class="hp-field">
+            <label for="loginPassword">Password</label>
+            <input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••••" required>
+          </div>
+          <p id="loginError" class="hp-error" role="alert" hidden></p>
+          <button type="submit" id="loginSubmit" class="btn btn-primary btn-block">Sign in</button>
+        </form>
+        <div class="hp-divider"><span>or</span></div>
+        <button class="btn btn-outline btn-block" onclick="openModal('demoModal'); closeModal('loginModal');">Try the demo instead</button>
+        <p class="hp-demo-note">No account? Explore the platform with realistic sample campus data — no password required.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL 7: DEMO MODE PERSONA SELECTOR
+       ========================================================================== -->
+  <div class="modal-overlay" id="demoModal">
+    <div class="modal-box modal-box--wide">
+      <div class="modal-header">
+        <div>
+          <h3>Explore with sample data</h3>
+          <p class="hp-modal-sub">Explore the platform using realistic sample campus data.</p>
+        </div>
+        <button onclick="closeModal('demoModal')" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="hp-banner-demo">🧪 Sample environment — exploring with realistic sample campus data. No real credentials required.</div>
+        <div class="hp-persona-grid" id="personaGrid">
+          <!-- Populated by renderPersonas() -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="hp-footer">
+    <div class="hp-footer__inner">
+      <div class="hp-footer__brand">
+        <a href="#top" class="brand-logo brand-logo--light" onclick="window.scrollTo({top:0,behavior:'smooth'}); return false;">
+          <span class="brand-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><polyline points="20 3 20 8 15 8"/></svg></span>
+          <span>Circuva</span>
+        </a>
+        <p>Closing the loop on campus environmental operations. Report, resolve, and verify — in one intelligent system.</p>
+        <span class="hp-footer__badge">Sample campus dataset</span>
+      </div>
+      <nav class="hp-footer__col" aria-label="Product">
+        <h4>Product</h4>
+        <a href="#how">How it works</a>
+        <a href="#categories">Categories</a>
+        <a href="#hotspots">Hotspot map</a>
+        <a href="#metrics">Impact metrics</a>
+      </nav>
+      <nav class="hp-footer__col" aria-label="Company">
+        <h4>Company</h4>
+        <a href="#roles">Roles</a>
+        <a href="#liveImpact">Live impact</a>
+        <a href="#" onclick="loginAsDemo('admin'); return false;">Launch demo</a>
+        <a href="#" onclick="openModal('loginModal'); return false;">Log in</a>
+      </nav>
+      <nav class="hp-footer__col" aria-label="Resources">
+        <h4>Resources</h4>
+        <a href="#problem">The problem</a>
+        <a href="#hotspots">Spatial analytics</a>
+        <a href="#metrics">ESG reporting</a>
+        <a href="#" onclick="openReportWizard(); return false;">Report an issue</a>
+      </nav>
+    </div>
+    <div class="hp-footer__bottom">
+      <p>© 2026 Circuva, Inc. — Greenfield University sample dataset. Figures shown are illustrative.</p>
+      <p class="hp-footer__legal"><a href="#">Privacy</a> · <a href="#">Terms</a> · <a href="#">Security</a></p>
+    </div>
+  </footer>
+
+  <!-- Application Controller JavaScript -->
+  <script src="/static/js/api.js?v=2"></script>
+  <script src="/static/js/charts.js?v=2"></script>
+  <script src="/static/js/campusmap.js?v=2"></script>
+  <script src="/static/js/campus-twin.js?v=2"></script>
+  <script src="/static/js/app.js?v=2"></script>
+</body>
+</html>
