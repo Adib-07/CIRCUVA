@@ -21,7 +21,7 @@ except Exception as e:
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    description="See it. Report it. Resolve it. — Commercial Campus Environmental Operations SaaS Platform",
+    description="See it. Report it. Resolve it. — Campus environmental issue reporting and operations platform",
     version="1.0.0"
 )
 

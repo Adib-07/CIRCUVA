@@ -50,7 +50,7 @@ def get_analytics_overview(
 
     resolution_rate = round((resolved / total * 100), 1) if total > 0 else 0.0
 
-    one_week_ago = datetime.datetime.utcnow() - datetime.timedelta(days=7)
+    one_week_ago = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7)
     weekly_new = db.query(Report).filter(Report.created_at >= one_week_ago).count()
 
     total_impact = db.query(func.coalesce(func.sum(User.impact_score), 0)).scalar() or 0
@@ -72,7 +72,7 @@ def get_analytics_overview(
 
     # 7-day trend (reported vs resolved)
     trend = []
-    today = datetime.datetime.utcnow().date()
+    today = datetime.datetime.now(datetime.timezone.utc).date()
     for i in range(6, -1, -1):
         day = today - datetime.timedelta(days=i)
         day_start = datetime.datetime.combine(day, datetime.time.min)
@@ -207,7 +207,7 @@ def get_charts_data(db: Session = Depends(get_db)):
     severity_rows = db.query(Report.severity, func.count(Report.id)).group_by(Report.severity).all()
 
     # 7-day trend
-    today = datetime.datetime.utcnow().date()
+    today = datetime.datetime.now(datetime.timezone.utc).date()
     weekly_trend = {"labels": [], "reported": [], "resolved": []}
     for i in range(6, -1, -1):
         day = today - datetime.timedelta(days=i)

@@ -14,17 +14,16 @@ from app.schemas.schemas import TokenData
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login", auto_error=False)
 
 def hash_password(password: str) -> str:
-    """Secure SHA256 + Salt hashing without binary C library dependencies.
+    """PBKDF2-SHA256 hashing with a fixed application-level pepper.
 
-    NOTE: This uses a fixed application-level pepper for all users, which is
-    acceptable for this demo application. A production system should use
-    per-user random salts stored alongside the hash.
+    This is acceptable for this demo application. A production system should
+    use per-user random salts stored alongside the hash (e.g. bcrypt/argon2).
     """
     salt = "cva_salt_2026_circuva"
     return hashlib.pbkdf2_hmac(
-        'sha256', 
-        password.encode('utf-8'), 
-        salt.encode('utf-8'), 
+        'sha256',
+        password.encode('utf-8'),
+        salt.encode('utf-8'),
         100000
     ).hex()
 
@@ -33,10 +32,11 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def create_access_token(data: dict, expires_delta: Optional[datetime.timedelta] = None) -> str:
     to_encode = data.copy()
+    now = datetime.datetime.now(datetime.timezone.utc)
     if expires_delta:
-        expire = datetime.datetime.utcnow() + expires_delta
+        expire = now + expires_delta
     else:
-        expire = datetime.datetime.utcnow() + datetime.timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = now + datetime.timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt

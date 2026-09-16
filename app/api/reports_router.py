@@ -9,18 +9,34 @@ from app.core.config import settings
 from app.database.session import get_db
 from app.models.all_models import User, Campus, Report, ReportImage, Assignment, Resolution, Verification, Notification
 from app.schemas.schemas import (
-    ReportOut, ReportDetail, ReportCreate, ReportStatusUpdate, 
+    ReportOut, ReportDetail, ReportCreate, ReportStatusUpdate,
     ReportAssign, ReportResolve, ReportVerify
 )
 from app.auth.security import get_current_user, require_role
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
 
+# Valid status transitions for the report lifecycle
+VALID_STATUS_TRANSITIONS = {
+    "submitted": {"acknowledged"},
+    "acknowledged": {"assigned"},
+    "assigned": {"in_progress"},
+    "in_progress": {"resolved"},
+    "resolved": {"verified", "in_progress"},  # verified or reopened
+    "verified": set(),  # terminal state
+}
+
+VALID_REPORT_STATUSES = {"submitted", "acknowledged", "assigned", "in_progress", "resolved", "verified"}
+
+ALLOWED_UPLOAD_MIMES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+
+
 def generate_report_code(db: Session) -> str:
-    count = db.query(Report).count() + 1
-    random_suffix = str(count).zfill(6)
-    year = datetime.datetime.now().year
-    return f"CVA-{year}-{random_suffix}"
+    """Generate a collision-safe report code using UUID randomness."""
+    year = datetime.datetime.now(datetime.timezone.utc).year
+    random_part = uuid.uuid4().hex[:6].upper()
+    return f"CVA-{year}-{random_part}"
+
 
 @router.get("", response_model=List[ReportOut])
 def get_reports(
@@ -34,17 +50,21 @@ def get_reports(
     date_from: Optional[str] = None,
     date_to: Optional[str] = None,
     sort: str = "newest",
-    skip: int = 0,
-    limit: int = 200,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db)
 ):
     query = db.query(Report)
 
     if status:
+        if status not in VALID_REPORT_STATUSES:
+            raise HTTPException(status_code=400, detail=f"Invalid status filter. Valid: {sorted(VALID_REPORT_STATUSES)}")
         query = query.filter(Report.status == status)
     if category:
         query = query.filter(Report.category == category)
     if urgency:
+        if urgency not in {"low", "medium", "high", "critical"}:
+            raise HTTPException(status_code=400, detail="Invalid urgency filter. Valid: low, medium, high, critical")
         query = query.filter(Report.severity == urgency)
     if location:
         query = query.filter(Report.building.ilike(f"%{location}%"))
@@ -64,13 +84,13 @@ def get_reports(
             df = datetime.datetime.fromisoformat(date_from)
             query = query.filter(Report.created_at >= df)
         except ValueError:
-            pass
+            raise HTTPException(status_code=400, detail=f"Invalid date_from format. Use ISO 8601 (e.g. 2026-01-01).")
     if date_to:
         try:
             dt = datetime.datetime.fromisoformat(date_to)
             query = query.filter(Report.created_at <= dt)
         except ValueError:
-            pass
+            raise HTTPException(status_code=400, detail=f"Invalid date_to format. Use ISO 8601 (e.g. 2026-12-31).")
 
     if sort == "oldest":
         query = query.order_by(Report.created_at.asc())
@@ -79,7 +99,6 @@ def get_reports(
 
     reports = query.offset(skip).limit(limit).all()
 
-    # Format reporter name into model output
     result = []
     for r in reports:
         out = ReportOut.model_validate(r)
@@ -87,26 +106,55 @@ def get_reports(
         result.append(out)
     return result
 
+
 @router.post("/upload-photo")
-async def upload_photo(file: UploadFile = File(...)):
-    """File upload endpoint saving files to /uploads and returning accessible URL"""
+async def upload_photo(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+):
+    """Authenticated file upload with MIME validation and size enforcement."""
     os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-    
-    ext = os.path.splitext(file.filename)[1].lower()
-    if ext not in settings.ALLOWED_EXTENSIONS:
-        ext = ".jpg" # fallback extension
 
-    filename = f"cva_{uuid.uuid4().hex[:10]}{ext}"
-    file_path = os.path.join(settings.UPLOAD_DIR, filename)
+    # Validate MIME type from content-type header
+    if file.content_type not in ALLOWED_UPLOAD_MIMES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid file type '{file.content_type}'. Allowed: {', '.join(sorted(ALLOWED_UPLOAD_MIMES))}"
+        )
 
+    # Read and validate size before any processing
     contents = await file.read()
     if len(contents) > settings.MAX_UPLOAD_SIZE:
-        raise HTTPException(status_code=400, detail="File exceeds maximum allowed size (10MB).")
+        raise HTTPException(status_code=413, detail="File exceeds maximum allowed size (10MB).")
+
+    # Validate actual file content by checking magic bytes
+    header = contents[:8] if len(contents) >= 8 else contents
+    is_valid_image = False
+    if header[:2] == b'\xff\xd8':  # JPEG
+        is_valid_image = True
+        ext = ".jpg"
+    elif header[:4] == b'\x89PNG':  # PNG
+        is_valid_image = True
+        ext = ".png"
+    elif header[:4] == b'RIFF' and header[8:12] == b'WEBP':  # WebP
+        is_valid_image = True
+        ext = ".webp"
+    elif header[:3] == b'GIF':  # GIF
+        is_valid_image = True
+        ext = ".gif"
+
+    if not is_valid_image:
+        raise HTTPException(status_code=400, detail="File content does not match a supported image format.")
+
+    # Generate server-side filename (never use user-controlled filename)
+    filename = f"cva_{uuid.uuid4().hex[:12]}{ext}"
+    file_path = os.path.join(settings.UPLOAD_DIR, filename)
 
     with open(file_path, "wb") as f:
         f.write(contents)
 
     return {"image_url": f"/uploads/{filename}"}
+
 
 @router.post("", response_model=ReportOut)
 def create_report(
@@ -115,8 +163,11 @@ def create_report(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    if report_in.severity not in {"low", "medium", "high", "critical"}:
+        raise HTTPException(status_code=400, detail="Invalid severity. Valid: low, medium, high, critical")
+
     code = generate_report_code(db)
-    
+
     campus = db.query(Campus).filter(Campus.id == report_in.campus_id).first()
     if not campus:
         campus = db.query(Campus).first()
@@ -144,20 +195,17 @@ def create_report(
             img = ReportImage(report_id=db_report.id, image_url=url, image_type="evidence")
             db.add(img)
     else:
-        # Default category image from config registry if no image uploaded
         cat_key = report_in.category.lower().replace(" ", "_")
         default_photo = settings.DEMO_PHOTOGRAPHY.get(cat_key, settings.DEMO_PHOTOGRAPHY["overflowing_bin"])
         img = ReportImage(report_id=db_report.id, image_url=default_photo, image_type="evidence")
         db.add(img)
 
-    # Update user impact score (+5 for reporting)
     current_user.impact_score += 5
-    
-    # Send notification to user
+
     notif = Notification(
         user_id=current_user.id,
         title="Report Submitted Successfully",
-        message=f"Your waste report {code} for '{report_in.category}' has been logged and queued for review."
+        message=f"Your issue report {code} for '{report_in.category}' has been logged and queued for review."
     )
     db.add(notif)
     db.commit()
@@ -167,27 +215,37 @@ def create_report(
     out.reporter_name = current_user.name
     return out
 
+
 @router.get("/{report_id}", response_model=ReportDetail)
-def get_report_detail(report_id: int, db: Session = Depends(get_db)):
+def get_report_detail(
+    report_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     report = db.query(Report).filter(Report.id == report_id).first()
     if not report:
         raise HTTPException(status_code=404, detail="Report not found")
-    
+
+    # Authorization: students can only view their own reports
+    if current_user.role == "student" and report.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="You can only view your own reports.")
+
     out = ReportDetail.model_validate(report)
-    out.reporter_name = report.reporter.name if report.reporter else "Anonymous Student"
-    
+    out.reporter_name = report.reporter.name if report.reporter else "Anonymous Reporter"
+
     # Populate worker names in assignments and resolutions
     for a in out.assignments:
         w = db.query(User).filter(User.id == a.worker_id).first()
         if w:
             a.worker_name = w.name
-            
+
     for r in out.resolutions:
         w = db.query(User).filter(User.id == r.worker_id).first()
         if w:
             r.worker_name = w.name
 
     return out
+
 
 @router.post("/{report_id}/acknowledge", response_model=ReportOut)
 def acknowledge_report(
@@ -199,20 +257,26 @@ def acknowledge_report(
     if not report:
         raise HTTPException(status_code=404, detail="Report not found")
 
-    if report.status not in ("submitted",):
+    if report.status not in VALID_STATUS_TRANSITIONS.get(report.status, set()) and report.status != "submitted":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Report is already '{report.status}' and cannot be acknowledged again."
+            detail=f"Report is '{report.status}' and cannot be acknowledged."
+        )
+    if report.status != "submitted":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Report is '{report.status}' and cannot be acknowledged. Must be 'submitted'."
         )
 
     report.status = "acknowledged"
-    report.updated_at = datetime.datetime.utcnow()
+    report.updated_at = datetime.datetime.now(datetime.timezone.utc)
     db.commit()
     db.refresh(report)
 
     out = ReportOut.model_validate(report)
     out.reporter_name = report.reporter.name if report.reporter else "Reporter"
     return out
+
 
 @router.patch("/{report_id}/status", response_model=ReportOut)
 def update_report_status(
@@ -224,15 +288,31 @@ def update_report_status(
     report = db.query(Report).filter(Report.id == report_id).first()
     if not report:
         raise HTTPException(status_code=404, detail="Report not found")
-    
-    report.status = status_in.status
-    report.updated_at = datetime.datetime.utcnow()
+
+    new_status = status_in.status
+    if new_status not in VALID_REPORT_STATUSES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid status '{new_status}'. Valid: {sorted(VALID_REPORT_STATUSES)}"
+        )
+
+    allowed_transitions = VALID_STATUS_TRANSITIONS.get(report.status, set())
+    if new_status not in allowed_transitions:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot transition from '{report.status}' to '{new_status}'. "
+                   f"Allowed: {sorted(allowed_transitions) if allowed_transitions else 'none (terminal state)'}"
+        )
+
+    report.status = new_status
+    report.updated_at = datetime.datetime.now(datetime.timezone.utc)
     db.commit()
     db.refresh(report)
 
     out = ReportOut.model_validate(report)
-    out.reporter_name = report.reporter.name if report.reporter else "Student"
+    out.reporter_name = report.reporter.name if report.reporter else "Reporter"
     return out
+
 
 @router.post("/{report_id}/assign", response_model=ReportDetail)
 def assign_report(
@@ -244,32 +324,39 @@ def assign_report(
     report = db.query(Report).filter(Report.id == report_id).first()
     if not report:
         raise HTTPException(status_code=404, detail="Report not found")
-    
+
+    if report.status not in ("acknowledged", "assigned", "in_progress"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot assign report in '{report.status}' status. Must be acknowledged, assigned, or in_progress."
+        )
+
     worker = db.query(User).filter(User.id == assign_in.worker_id, User.role == "facilities").first()
     if not worker:
-        # Fallback to any facility worker if specific ID not found
         worker = db.query(User).filter(User.role == "facilities").first()
+
+    if not worker:
+        raise HTTPException(status_code=400, detail="No facility worker available for assignment.")
 
     assignment = Assignment(
         report_id=report.id,
-        worker_id=worker.id if worker else current_user.id,
+        worker_id=worker.id,
         notes=assign_in.notes or "Dispatched by administrator"
     )
     db.add(assignment)
-    
+
     report.status = "assigned"
-    report.updated_at = datetime.datetime.utcnow()
-    
-    # Send notification to facility worker
-    if worker:
-        db.add(Notification(
-            user_id=worker.id,
-            title="New Cleanup Assignment",
-            message=f"You have been assigned to resolve waste report {report.report_code} at {report.building}."
-        ))
+    report.updated_at = datetime.datetime.now(datetime.timezone.utc)
+
+    db.add(Notification(
+        user_id=worker.id,
+        title="New Cleanup Assignment",
+        message=f"You have been assigned to resolve issue report {report.report_code} at {report.building}."
+    ))
 
     db.commit()
-    return get_report_detail(report_id, db)
+    return get_report_detail(report_id, db, current_user)
+
 
 @router.post("/{report_id}/resolve", response_model=ReportDetail)
 def resolve_report(
@@ -282,6 +369,12 @@ def resolve_report(
     if not report:
         raise HTTPException(status_code=404, detail="Report not found")
 
+    if report.status not in ("assigned", "in_progress"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot resolve report in '{report.status}' status. Must be assigned or in_progress."
+        )
+
     after_photo = resolve_in.after_image_url or settings.DEMO_PHOTOGRAPHY["after_clean"]
 
     resolution = Resolution(
@@ -292,8 +385,7 @@ def resolve_report(
         resolution_notes=resolve_in.resolution_notes
     )
     db.add(resolution)
-    
-    # Save image to report images
+
     db.add(ReportImage(
         report_id=report.id,
         image_url=after_photo,
@@ -301,9 +393,8 @@ def resolve_report(
     ))
 
     report.status = "resolved"
-    report.updated_at = datetime.datetime.utcnow()
+    report.updated_at = datetime.datetime.now(datetime.timezone.utc)
 
-    # Notify original reporter to verify
     db.add(Notification(
         user_id=report.user_id,
         title="Issue Marked Resolved",
@@ -311,7 +402,8 @@ def resolve_report(
     ))
 
     db.commit()
-    return get_report_detail(report_id, db)
+    return get_report_detail(report_id, db, current_user)
+
 
 @router.post("/{report_id}/verify", response_model=ReportDetail)
 def verify_report(
@@ -323,6 +415,19 @@ def verify_report(
     report = db.query(Report).filter(Report.id == report_id).first()
     if not report:
         raise HTTPException(status_code=404, detail="Report not found")
+
+    if report.status != "resolved":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot verify report in '{report.status}' status. Must be 'resolved'."
+        )
+
+    # Only the original reporter can verify
+    if report.user_id != current_user.id:
+        raise HTTPException(
+            status_code=403,
+            detail="Only the original reporter can verify resolution."
+        )
 
     verification = Verification(
         report_id=report.id,
@@ -341,9 +446,7 @@ def verify_report(
             message=f"Thank you for confirming resolution of {report.report_code}! You earned +10 Impact Score points."
         ))
     else:
-        # Reopen report if user says not resolved
         report.status = "in_progress"
-        # Notify admins
         admins = db.query(User).filter(User.role.in_(["admin", "facilities"])).all()
         for adm in admins:
             db.add(Notification(
@@ -352,6 +455,6 @@ def verify_report(
                 message=f"Reporter rejected resolution for {report.report_code} at {report.building}: '{verify_in.feedback or 'Problem still persists'}'"
             ))
 
-    report.updated_at = datetime.datetime.utcnow()
+    report.updated_at = datetime.datetime.now(datetime.timezone.utc)
     db.commit()
-    return get_report_detail(report_id, db)
+    return get_report_detail(report_id, db, current_user)

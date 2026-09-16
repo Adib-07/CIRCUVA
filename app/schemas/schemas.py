@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 from typing import List, Optional
 from datetime import datetime
 
@@ -27,12 +27,11 @@ class UserLogin(BaseModel):
     password: str
 
 class UserOut(UserBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     impact_score: int = 10
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 # Campus Schemas
 class CampusBase(BaseModel):
@@ -46,24 +45,24 @@ class CampusCreate(CampusBase):
     pass
 
 class CampusOut(CampusBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     created_at: datetime
 
-    class Config:
-        from_attributes = True
-
 # Report Image Schema
 class ReportImageOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     image_url: str
     image_type: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
-
 # Assignment Schema
 class AssignmentOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     worker_id: int
     worker_name: Optional[str] = None
@@ -71,11 +70,10 @@ class AssignmentOut(BaseModel):
     assigned_at: datetime
     completed_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
-
 # Resolution Schema
 class ResolutionOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     worker_id: int
     worker_name: Optional[str] = None
@@ -84,19 +82,15 @@ class ResolutionOut(BaseModel):
     resolution_notes: str
     resolved_at: datetime
 
-    class Config:
-        from_attributes = True
-
 # Verification Schema
 class VerificationOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     user_id: int
     verified: bool
     feedback: Optional[str] = None
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 # Report Schemas
 class ReportCreate(BaseModel):
@@ -125,6 +119,8 @@ class ReportVerify(BaseModel):
     feedback: Optional[str] = None
 
 class ReportOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     report_code: str
     user_id: int
@@ -142,9 +138,6 @@ class ReportOut(BaseModel):
     reporter_name: Optional[str] = None
     images: List[ReportImageOut] = []
 
-    class Config:
-        from_attributes = True
-
 class ReportDetail(ReportOut):
     assignments: List[AssignmentOut] = []
     resolutions: List[ResolutionOut] = []
@@ -152,14 +145,13 @@ class ReportDetail(ReportOut):
 
 # Notification Schema
 class NotificationOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     title: str
     message: str
     read: bool
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 # Analytics & Dashboard Schemas
 class StatusCount(BaseModel):
@@ -198,7 +190,7 @@ class HotspotOut(BaseModel):
 class ActivityOut(BaseModel):
     id: int
     report_code: str
-    type: str  # report_created, acknowledged, assigned, status_updated, resolved, verified
+    type: str
     message: str
     timestamp: datetime
     severity: str

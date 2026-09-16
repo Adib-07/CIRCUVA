@@ -82,7 +82,7 @@ def seed_database():
         db.refresh(admin)
 
         # 3. Create Sample Reports (full lifecycle + repeated locations for real hotspots)
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.timezone.utc)
         reports_data = [
             {
                 "code": "CVA-2026-004821", "category": "Overflowing Bin",

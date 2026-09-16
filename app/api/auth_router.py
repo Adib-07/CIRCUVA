@@ -9,7 +9,11 @@ from app.auth.security import hash_password, verify_password, create_access_toke
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
-# Canonical persona roles and accepted legacy aliases.
+# Public registration only permits these self-service roles.
+# Privileged roles (admin, facilities) must be assigned via seed data or internal tooling.
+PUBLIC_REGISTRATION_ROLES = {"student", "faculty"}
+
+# Canonical persona roles for demo-login lookup.
 ALLOWED_ROLES = ["student", "faculty", "facilities", "admin"]
 ROLE_EMAIL_MAP = {p["role"]: p["email"] for p in PERSONAS}
 LEGACY_ROLE_EMAIL_MAP = {
@@ -25,18 +29,27 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User with this email already exists."
         )
-    
-    # Verify campus
+
+    # Public registration only permits self-service roles.
+    # Privileged roles (admin, facilities) must be assigned via seed data or admin tooling.
+    requested_role = user_in.role.lower() if user_in.role else "student"
+    if requested_role not in PUBLIC_REGISTRATION_ROLES:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Public registration is limited to student and faculty accounts. "
+                   "Admin and facilities accounts are created by system administrators."
+        )
+
+    # Verify campus exists
     campus = db.query(Campus).filter(Campus.id == user_in.campus_id).first()
     if not campus:
         campus = db.query(Campus).first()
 
-    canonical_role = user_in.role if user_in.role in ALLOWED_ROLES else "student"
     db_user = User(
         name=user_in.name,
         email=user_in.email,
         password_hash=hash_password(user_in.password),
-        role=canonical_role,
+        role=requested_role,
         campus_id=campus.id if campus else None,
         impact_score=10
     )
@@ -96,18 +109,33 @@ def list_users(
 
 @router.post("/demo-login/{role}", response_model=Token)
 def demo_login(role: str, db: Session = Depends(get_db)):
-    """Passwordless 1-Click login for DEMO personas only — explicitly a demo experience."""
-    normalized = "facilities" if role.lower() == "facility_worker" else ("admin" if role.lower() == "super_admin" else role.lower())
-    target_email = ROLE_EMAIL_MAP.get(normalized) or LEGACY_ROLE_EMAIL_MAP.get(role.lower(), "alex.student@greenfield.edu")
-    user = db.query(User).filter(User.email == target_email).first()
-    
-    if not user:
-        user = db.query(User).filter(User.role == normalized).first()
-    if not user:
-        user = db.query(User).first()
+    """Passwordless 1-Click login for DEMO personas only — explicitly a demo experience.
 
+    Invalid or unknown persona roles return 400 with a clear error.
+    """
+    normalized = role.lower()
+    if normalized == "facility_worker":
+        normalized = "facilities"
+    elif normalized == "super_admin":
+        normalized = "admin"
+
+    # Look up the demo email for this role
+    target_email = ROLE_EMAIL_MAP.get(normalized)
+    if not target_email:
+        target_email = LEGACY_ROLE_EMAIL_MAP.get(role.lower())
+
+    if not target_email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unknown demo persona '{role}'. Valid personas: {list(ROLE_EMAIL_MAP.keys())}"
+        )
+
+    user = db.query(User).filter(User.email == target_email).first()
     if not user:
-        raise HTTPException(status_code=404, detail="Demo user not found. Please seed the database.")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Demo user for persona '{role}' not found. Please seed the database."
+        )
 
     token = create_access_token({"sub": user.email, "role": user.role, "id": user.id})
     return Token(access_token=token, user=UserOut.model_validate(user))

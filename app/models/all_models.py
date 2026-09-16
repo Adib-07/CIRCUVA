@@ -3,6 +3,9 @@ from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, Foreig
 from sqlalchemy.orm import relationship
 from app.database.session import Base
 
+def _utcnow() -> datetime.datetime:
+    return datetime.datetime.now(datetime.timezone.utc)
+
 class User(Base):
     __tablename__ = "users"
 
@@ -13,7 +16,7 @@ class User(Base):
     role = Column(String(50), default="student", nullable=False) # student, faculty, facilities, admin
     campus_id = Column(Integer, ForeignKey("campuses.id"), nullable=True)
     impact_score = Column(Integer, default=10)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=_utcnow)
 
     campus = relationship("Campus", back_populates="users")
     reports = relationship("Report", back_populates="reporter")
@@ -30,7 +33,7 @@ class Campus(Base):
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
     organization = Column(String(150), nullable=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=_utcnow)
 
     users = relationship("User", back_populates="campus")
     reports = relationship("Report", back_populates="campus")
@@ -50,8 +53,8 @@ class Report(Base):
     building = Column(String(150), nullable=False)
     severity = Column(String(20), default="medium", nullable=False) # low, medium, high, critical
     status = Column(String(30), default="submitted", nullable=False) # submitted, acknowledged, assigned, in_progress, resolved, verified
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=_utcnow)
+    updated_at = Column(DateTime, default=_utcnow, onupdate=_utcnow)
 
     reporter = relationship("User", back_populates="reports")
     campus = relationship("Campus", back_populates="reports")
@@ -67,7 +70,7 @@ class ReportImage(Base):
     report_id = Column(Integer, ForeignKey("reports.id"), nullable=False)
     image_url = Column(String(500), nullable=False)
     image_type = Column(String(50), default="evidence") # evidence, before, after
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=_utcnow)
 
     report = relationship("Report", back_populates="images")
 
@@ -78,7 +81,7 @@ class Assignment(Base):
     report_id = Column(Integer, ForeignKey("reports.id"), nullable=False)
     worker_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     notes = Column(Text, nullable=True)
-    assigned_at = Column(DateTime, default=datetime.datetime.utcnow)
+    assigned_at = Column(DateTime, default=_utcnow)
     completed_at = Column(DateTime, nullable=True)
 
     report = relationship("Report", back_populates="assignments")
@@ -93,7 +96,7 @@ class Resolution(Base):
     before_image = Column(String(500), nullable=True)
     after_image = Column(String(500), nullable=False)
     resolution_notes = Column(Text, nullable=False)
-    resolved_at = Column(DateTime, default=datetime.datetime.utcnow)
+    resolved_at = Column(DateTime, default=_utcnow)
 
     report = relationship("Report", back_populates="resolutions")
 
@@ -105,7 +108,7 @@ class Verification(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     verified = Column(Boolean, nullable=False) # True = fixed, False = reopened
     feedback = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=_utcnow)
 
     report = relationship("Report", back_populates="verifications")
     user = relationship("User", back_populates="verifications")
@@ -118,6 +121,6 @@ class Notification(Base):
     title = Column(String(200), nullable=False)
     message = Column(Text, nullable=False)
     read = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=_utcnow)
 
     user = relationship("User", back_populates="notifications")
