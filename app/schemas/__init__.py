@@ -1,0 +1,1 @@
+# CIRCUVA Pydantic schemas
