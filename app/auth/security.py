@@ -14,7 +14,12 @@ from app.schemas.schemas import TokenData
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login", auto_error=False)
 
 def hash_password(password: str) -> str:
-    """Secure SHA256 + Salt hashing without binary C library dependencies."""
+    """Secure SHA256 + Salt hashing without binary C library dependencies.
+
+    NOTE: This uses a fixed application-level pepper for all users, which is
+    acceptable for this demo application. A production system should use
+    per-user random salts stored alongside the hash.
+    """
     salt = "cva_salt_2026_circuva"
     return hashlib.pbkdf2_hmac(
         'sha256', 

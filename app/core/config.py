@@ -1,14 +1,27 @@
 import os
+import secrets
+
 
 class Settings:
     PROJECT_NAME: str = "Circuva"
     API_V1_STR: str = "/api/v1"
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "cva_super_secret_production_key_2026_circuva")
+
+    # JWT Secret — must be set via SECRET_KEY environment variable.
+    # For local development, generate one with: python -c "import secrets; print(secrets.token_hex(32))"
+    # A random development-only fallback is used if SECRET_KEY is not set.
+    SECRET_KEY: str = os.getenv("SECRET_KEY") or secrets.token_hex(32)
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
 
     # Database
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./circuva.db")
+
+    # CORS — comma-separated list of allowed origins
+    CORS_ORIGINS: list[str] = [
+        origin.strip()
+        for origin in os.getenv("CORS_ORIGINS", "http://localhost:8000").split(",")
+        if origin.strip()
+    ]
 
     # Uploads
     UPLOAD_DIR: str = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "uploads")

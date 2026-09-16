@@ -1,36 +1,107 @@
 # Circuva
 
-> **See it. Report it. Resolve it.**
-> Closing the loop on campus environmental operations.
+> See it. Report it. Resolve it.
 
-Circuva is a commercial-grade, production-ready SaaS web platform that empowers students and staff to report campus environmental issues, while enabling campus administrators and facility operations teams to manage dispatch, resolve incidents, verify cleanups, and analyze spatial operational hotspots.
-
----
-
-## 🌟 Key Features
-
-- **Commercial SaaS Design & Branding**: Deep charcoal, off-white, and emerald palette with modern glassmorphism headers, real photography from Unsplash, and responsive UI.
-- **Floating Live Campus Status Panel**: Live demo statistics showing daily reports, resolved count, in-progress items, and critical alerts.
-- **Interactive Campus Map**: Leaflet.js map with color-coded severity markers, building labels, and incident details popups.
-- **Multi-Step Issue Reporting Wizard**: 5-step intuitive flow (Category Picker, Building/GPS Location, Severity Rating, Evidence Photo Upload with preview, Summary & unique `CVA-2026-XXXXXX` code generation).
-- **Interactive Before/After Slider**: Visual image comparison component showcasing campus transformation after cleanup.
-- **Role-Based Portals & Dashboards**:
-  - **Student / Staff Dashboard**: View submitted reports, track status timelines, and earn Impact Score points.
-  - **Admin Operations Dashboard**: Live Incident Feed, Chart.js analytics (Categories, Locations, Weekly Trend, Severity), Waste Hotspots with trend indicators, and Worker Dispatching.
-  - **Facility Operations Team Dashboard**: View assigned tasks, accept jobs, upload resolution proof photos, and mark resolved.
-- **Reporter Verification Loop**: Closed-loop resolution confirmation ("Was this problem fixed?") that auto-reopens rejected tasks and notifies administrators.
+A full-stack web application for campus environmental issue reporting and resolution tracking. Built with FastAPI, SQLAlchemy, and vanilla JavaScript.
 
 ---
 
-## 🚀 Quick Start
+## Problem
 
-### 1. Prerequisites
-- Python 3.10+ installed.
+Campus environments face recurring waste management issues — overflowing bins, illegal dumping, recycling contamination, and missed collections. Existing reporting processes are fragmented (email, paper forms, informal requests), making it difficult to track resolution status, identify hotspots, or measure response performance.
 
-### 2. Environment Setup & Installation
+## Solution
+
+Circuva provides a closed-loop workflow: **report → dispatch → resolve → verify**. Students and staff submit issues with photos and location data. Facility operations teams receive assignments, perform cleanup, and upload proof. Administrators monitor analytics and operational hotspots through role-based dashboards.
+
+---
+
+## Key Capabilities
+
+- **Issue Reporting Wizard** — Multi-step form for submitting environmental issues with category, location, severity, and photo evidence
+- **Interactive SVG Campus Map** — Custom-built pseudo-3D campus visualization with severity-coded incident markers and building details
+- **Role-Based Dashboards** — Separate views for students (report tracking), facility workers (task management), and administrators (analytics)
+- **Analytics Dashboard** — Custom SVG charts showing category distribution, location hotspots, severity trends, and resolution metrics
+- **Before/After Comparison** — Visual slider component for cleanup verification
+- **Verification Loop** — Reporters confirm resolution status, with auto-reopen for rejected verifications
+- **Notification Backend** — Automated notification creation for assignments, resolutions, and status events (database layer; no frontend inbox UI yet)
+- **Impact Scoring** — Gamified contributor tracking for student reporters
+
+---
+
+## How It Works
+
+1. A reporter submits an issue through the 5-step wizard (category → building/GPS → severity → photo upload → summary)
+2. The system generates a unique report code (`CVA-2026-XXXXXX`)
+3. An admin assigns the report to a facility worker
+4. The worker resolves the issue and uploads an after-photo
+5. The original reporter verifies whether the problem was fixed
+6. Analytics update in real-time across all dashboards
+
+---
+
+## Architecture
+
+```
+CIRCUVA/
+├── app/
+│   ├── api/              # FastAPI routers (auth, reports, analytics)
+│   ├── auth/             # JWT authentication and RBAC
+│   ├── core/             # Application configuration
+│   ├── database/         # SQLAlchemy session and seed data
+│   ├── models/           # Database models (User, Campus, Report, etc.)
+│   ├── schemas/          # Pydantic request/response schemas
+│   └── main.py           # FastAPI application entrypoint
+├── static/
+│   ├── css/styles.css    # Application styles
+│   ├── js/               # Frontend JavaScript modules
+│   │   ├── app.js        # Main application controller
+│   │   ├── campusmap.js  # Custom SVG campus map
+│   │   ├── charts.js     # Custom SVG chart engine
+│   │   └── campus-twin.js
+│   ├── img/              # SVG illustrations
+│   └── assets/images/    # Photography assets
+├── templates/
+│   └── index.html        # Single-page application template
+├── tests/
+│   └── test_api.py       # API endpoint tests
+├── uploads/              # User-uploaded evidence images (runtime)
+├── .env.example          # Environment configuration template
+├── requirements.txt      # Python dependencies
+└── README.md
+```
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Backend | FastAPI (Python 3.10+) |
+| ORM | SQLAlchemy 2.x |
+| Database | SQLite |
+| Authentication | JWT (python-jose) with role-based access control |
+| Password Hashing | PBKDF2-SHA256 |
+| Image Processing | Pillow |
+| Templating | Jinja2 |
+| Frontend | Vanilla HTML5 / CSS3 / JavaScript (no frameworks) |
+| Charts | Custom SVG rendering engine (no external library) |
+| Campus Map | Custom SVG pseudo-3D visualization (no external library) |
+
+---
+
+## Setup
+
+### Prerequisites
+
+- Python 3.10+
+
+### Installation
+
 ```bash
-# Navigate to project directory
-cd campus-waste-reporter
+# Clone the repository
+git clone https://github.com/Adib-07/CIRCUVA.git
+cd CIRCUVA
 
 # Create virtual environment
 python3 -m venv venv
@@ -40,49 +111,90 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 3. Seed Database & Run Server
+### Environment Configuration
+
 ```bash
-# Seed Greenfield University demo data
+# Copy the example environment file
+cp .env.example .env
+
+# For local development, generate a JWT secret key:
+python -c "import secrets; print(secrets.token_hex(32))"
+
+# Add the generated key to your .env file:
+# SECRET_KEY=<your-generated-key>
+```
+
+### Seed Database & Run
+
+```bash
+# Seed demo data (Greenfield University campus)
 python -m app.database.seed
 
-# Start the uvicorn development server
+# Start the development server
 uvicorn app.main:app --reload --port 8000
 ```
-Open your browser at `http://localhost:8000`.
+
+Open http://localhost:8000 in your browser.
 
 ---
 
-## 🔑 Demo Personas & Quick Login
+## Environment Variables
 
-Use the 1-Click Login toolbar at the top of the interface:
-
-| Role | Demo User | Email | Password |
-|---|---|---|---|
-| **Student Reporter** | Alex Rivera | `alex.student@greenfield.edu` | `Password123!` |
-| **Facility Operations Worker** | Marcus Vance | `marcus.worker@greenfield.edu` | `Password123!` |
-| **Campus Administrator** | Dr. Sarah Jenkins | `sarah.admin@greenfield.edu` | `Password123!` |
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `SECRET_KEY` | JWT signing key (required for production) | Random per-process (dev only) |
+| `DATABASE_URL` | Database connection string | `sqlite:///./circuva.db` |
+| `CORS_ORIGINS` | Comma-separated allowed origins | `http://localhost:8000` |
 
 ---
 
-## 📁 Project Architecture
+## Demo Accounts
 
+Use the 1-Click Login toolbar in the application interface.
+
+These are **demo accounts** for the seeded Greenfield University campus. All passwords are `Password123!`.
+
+| Role | Name | Email |
+|------|------|-------|
+| Student Reporter | Alex Rivera | `alex.student@greenfield.edu` |
+| Facility Operations Worker | Marcus Vance | `marcus.worker@greenfield.edu` |
+| Campus Administrator | Dr. Sarah Jenkins | `sarah.admin@greenfield.edu` |
+
+---
+
+## Testing
+
+```bash
+# Run the test suite
+python -m pytest tests/ -v
+
+# Verify application imports
+python -c "from app.main import app; print('OK')"
 ```
-campus-waste-reporter/
-├── app/
-│   ├── api/                # FastAPI Routers (Auth, Reports, Analytics)
-│   ├── auth/               # Password hashing, JWT & RBAC Middlewares
-│   ├── core/               # App configuration & photography registry
-│   ├── database/           # DB session & Greenfield University seeder
-│   ├── models/             # SQLAlchemy DB Entities
-│   ├── schemas/            # Pydantic Schemas
-│   └── main.py             # FastAPI App Entrypoint
-├── static/
-│   ├── css/styles.css      # SaaS Design System & Styling
-│   └── js/app.js           # Frontend Interactive Controller
-├── templates/
-│   └── index.html          # HTML5 Application Template
-├── uploads/                # Local evidence & resolution image storage
-├── .env.example
-├── requirements.txt
-└── README.md
-```
+
+---
+
+## Current Status
+
+This is a functional prototype / portfolio demonstration. The application is fully operational for local development with seeded demo data.
+
+**Implemented:**
+- Complete issue reporting workflow with photo uploads
+- Role-based authentication and authorization
+- Interactive SVG campus map and analytics charts
+- Reporter verification loop with auto-reopen
+- Notification backend (database layer, no frontend UI)
+
+**Known Limitations:**
+- SQLite database (not suitable for production concurrency)
+- File-based uploads (no cloud storage integration)
+- Fixed password salt shared across all users (acceptable for demo; production should use per-user salts)
+- CORS defaults to localhost only
+- No email/notification delivery integration
+- No automated deployment pipeline
+
+---
+
+## License
+
+This project is for demonstration purposes.
